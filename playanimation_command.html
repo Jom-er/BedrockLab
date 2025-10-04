@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BedrockLab - PlayAnimation Command Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+            opacity: 0;
+            /* fade-in start */
+            transition: opacity 0.5s ease;
+            /* fade-in/out duration */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: #1f1f1f;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff9900;
+            margin-bottom: 10px;
+        }
+
+        p {
+            text-align: center;
+            color: #bbb;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 6px;
+            border: none;
+            background: #2a2a2a;
+            color: #f0f0f0;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: #ff9900;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #121212;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: #ffaa33;
+            transform: translateY(-2px);
+        }
+
+        #commandOutput {
+            margin-top: 25px;
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            word-break: break-all;
+            color: #00ffcc;
+            min-height: 150px;
+            white-space: pre-wrap;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .input-grid label {
+            margin-top: 0;
+            font-size: 12px;
+        }
+
+        .output-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .output-buttons button {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>BedrockLab</h1>
+        <p>PlayAnimation Command Generator</p>
+        <label for="preset">Preset:</label>
+        <select id="preset" onchange="applyPreset()">
+            <option value="none">None</option>
+            <option value="block3D">Block 3D</option>
+            <option value="block2D">Block 2D</option>
+            <option value="item">Item</option>
+        </select>
+        <div id="customInputs" style="display:none;">
+            <div class="input-grid">
+                <div><label for="xpos">X Position</label><input type="number" id="xpos" value="0" step="0.01"></div>
+                <div><label for="ypos">Y Position</label><input type="number" id="ypos" value="0" step="0.01"></div>
+                <div><label for="zpos">Z Position</label><input type="number" id="zpos" value="0" step="0.01"></div>
+                <div><label for="scale">Scale</label><input type="number" id="scale" value="1" step="0.01"></div>
+                <div><label for="xrot">X Rotation</label><input type="number" id="xrot" value="0" step="0.01"></div>
+                <div><label for="yrot">Y Rotation</label><input type="number" id="yrot" value="0" step="0.01"></div>
+                <div><label for="zrot">Z Rotation</label><input type="number" id="zrot" value="0" step="0.01"></div>
+                <div><label for="extendScale">Extend Scale</label><input type="number" id="extendScale" value="1"
+                        step="0.01"></div>
+            </div>
+        </div>
+        <button onclick="generatePresetCommand()">Generate Commands</button>
+        <div id="commandOutput"></div>
+        <div class="output-buttons">
+            <button onclick="copyCommand()">Copy</button>
+            <button onclick="clearCommand()">Clear</button>
+            <button onclick="checkCommand()">Check Command</button>
+            <button id="returnBtn">Return to Homepage</button>
+        </div>
+    </div>
+
+    <script>
+        // Fade-in effect
+        window.addEventListener('DOMContentLoaded', () => {
+            document.body.style.opacity = 1;
+        });
+
+        // Return to homepage with fade-out
+        document.getElementById('returnBtn').addEventListener('click', () => {
+            document.body.style.opacity = 0;
+            setTimeout(() => {
+                window.location.href = "index.html"; // adjust if your homepage filename is different
+            }, 500); // same 0.5s as fade-in
+        });
+
+        const presets = {
+            block3D: ['animation.player.sleeping', 'animation.creeper.swelling', 'animation.ender_dragon.neck_head_movement', 'animation.warden.move', 'animation.player.attack.rotations'],
+            block2D: ['animation.player.sleeping', 'animation.creeper.swelling', 'animation.ender_dragon.neck_head_movement', 'animation.warden.move', 'animation.player.attack.rotations'],
+            item: ['animation.player.sleeping', 'animation.creeper.swelling', 'animation.ender_dragon.neck_head_movement', 'animation.warden.move', 'animation.player.attack.rotations']
+        };
+
+        function applyPreset() {
+            const preset = document.getElementById('preset').value;
+            document.getElementById('customInputs').style.display = preset === "none" ? 'none' : 'block';
+        }
+
+        function generatePresetCommand() {
+            const preset = document.getElementById('preset').value;
+            if (preset === "none") return;
+            const xpos = parseFloat(document.getElementById('xpos').value);
+            const ypos = parseFloat(document.getElementById('ypos').value);
+            const zpos = parseFloat(document.getElementById('zpos').value);
+            const xrot = parseFloat(document.getElementById('xrot').value);
+            const yrot = parseFloat(document.getElementById('yrot').value);
+            const zrot = parseFloat(document.getElementById('zrot').value);
+            const scale = parseFloat(document.getElementById('scale').value);
+            const extendScale = parseFloat(document.getElementById('extendScale').value);
+
+            const anims = presets[preset];
+            let commands = '';
+            anims.forEach((anim, index) => {
+                commands += `/playanimation @e[tag=wiki:fmbe] ${anim} _ 0 "v.xpos=${xpos};v.ypos=${ypos};v.zpos=${zpos};v.xrot=${xrot};v.yrot=${yrot};v.zrot=${zrot};v.scale=${scale};v.extend_scale=${extendScale};" wiki:${preset}.anim${index + 1}\n`;
+            });
+            document.getElementById('commandOutput').textContent = commands.trim();
+        }
+
+        function copyCommand() {
+            const commands = document.getElementById('commandOutput').textContent;
+            if (commands.trim() !== "") navigator.clipboard.writeText(commands).then(() => alert("Commands copied!")).catch(err => alert("Failed to copy: " + err));
+        }
+
+        function clearCommand() { document.getElementById('commandOutput').textContent = ""; }
+
+        function checkCommand() {
+            const commands = document.getElementById('commandOutput').textContent.trim();
+            if (!commands) { alert("No command to check!"); return; }
+            const lines = commands.split("\n");
+            let invalid = [];
+            lines.forEach((line, idx) => { if (!line.startsWith("/playanimation") || !line.includes("v.xpos")) invalid.push(idx + 1) });
+            if (invalid.length === 0) alert("All commands passed basic check ✅");
+            else alert("Issues in line(s): " + invalid.join(", ") + " ⚠️");
+        }
+    </script>
+</body>
+
+</html>

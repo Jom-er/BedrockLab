@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BedrockLab</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            opacity: 0;
+            /* fade-in start */
+            transition: opacity 0.5s ease;
+            /* fade duration */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: #1f1f1f;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h1 {
+            color: #ff9900;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: #bbb;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        a.button-link {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #ff9900;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            color: #121212;
+            font-size: 18px;
+            transition: all 0.2s ease;
+        }
+
+        a.button-link:hover {
+            background: #ffaa33;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="homePage">
+        <h1>Welcome to BedrockLab</h1>
+        <p>Your Minecraft Bedrock Edition Command Generator hub.<br>
+            Generate PlayAnimation commands for blocks, items, and entities easily.</p>
+        <a href="./playanimation_command.html" class="button-link" id="generatorLink">Go to Command Generator</a>
+    </div>
+
+    <script>
+        // Fade-in on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            document.body.style.opacity = 1;
+        });
+
+        // Fade-out when navigating to generator page
+        const link = document.getElementById('generatorLink');
+        link.addEventListener('click', function (e) {
+            e.preventDefault(); // prevent immediate navigation
+            const href = this.href;
+            document.body.style.opacity = 0; // fade out
+            setTimeout(() => {
+                window.location.href = href;
+            }, 500); // same 0.5s fade duration
+        });
+    </script>
+</body>
+
+</html>
