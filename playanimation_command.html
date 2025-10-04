@@ -139,7 +139,16 @@
                 <div><label for="extendScale">Extend Scale</label><input type="number" id="extendScale" value="1"
                         step="0.01"></div>
             </div>
+
+            <!-- New interpolation slider below inputs -->
+            <div style="margin-top:20px;">
+                <label for="lifetime">Interpolation (q.life_time)</label>
+                <input type="range" id="lifetime" min="0" max="100" value="50" step="1"
+                    oninput="document.getElementById('lifetimeValue').textContent=this.value">
+                <div class="slider-value">Value: <span id="lifetimeValue">50</span></div>
+            </div>
         </div>
+
         <button onclick="generatePresetCommand()">Generate Commands</button>
         <div id="commandOutput"></div>
         <div class="output-buttons">
@@ -160,8 +169,8 @@
         document.getElementById('returnBtn').addEventListener('click', () => {
             document.body.style.opacity = 0;
             setTimeout(() => {
-                window.location.href = "index.html"; // adjust if your homepage filename is different
-            }, 500); // same 0.5s as fade-in
+                window.location.href = "index.html";
+            }, 500);
         });
 
         const presets = {
@@ -178,6 +187,7 @@
         function generatePresetCommand() {
             const preset = document.getElementById('preset').value;
             if (preset === "none") return;
+
             const xpos = parseFloat(document.getElementById('xpos').value);
             const ypos = parseFloat(document.getElementById('ypos').value);
             const zpos = parseFloat(document.getElementById('zpos').value);
@@ -186,18 +196,20 @@
             const zrot = parseFloat(document.getElementById('zrot').value);
             const scale = parseFloat(document.getElementById('scale').value);
             const extendScale = parseFloat(document.getElementById('extendScale').value);
+            const lifetime = parseInt(document.getElementById('lifetime').value); // new
 
             const anims = presets[preset];
             let commands = '';
             anims.forEach((anim, index) => {
-                commands += `/playanimation @e[tag=wiki:fmbe] ${anim} _ 0 "v.xpos=${xpos};v.ypos=${ypos};v.zpos=${zpos};v.xrot=${xrot};v.yrot=${yrot};v.zrot=${zrot};v.scale=${scale};v.extend_scale=${extendScale};" wiki:${preset}.anim${index + 1}\n`;
+                commands += `/playanimation @e[tag=wiki:fmbe] ${anim} _ 0 "v.xpos=${xpos};v.ypos=${ypos};v.zpos=${zpos};v.xrot=${xrot};v.yrot=${yrot};v.zrot=${zrot};v.scale=${scale};v.extend_scale=${extendScale};q.life_time=${lifetime};" wiki:${preset}.anim${index + 1}\n`;
             });
             document.getElementById('commandOutput').textContent = commands.trim();
         }
 
         function copyCommand() {
             const commands = document.getElementById('commandOutput').textContent;
-            if (commands.trim() !== "") navigator.clipboard.writeText(commands).then(() => alert("Commands copied!")).catch(err => alert("Failed to copy: " + err));
+            if (commands.trim() !== "")
+                navigator.clipboard.writeText(commands).then(() => alert("Commands copied!")).catch(err => alert("Failed to copy: " + err));
         }
 
         function clearCommand() { document.getElementById('commandOutput').textContent = ""; }
