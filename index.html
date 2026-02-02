@@ -12,7 +12,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #121a29;
+            background-color: #0f172a;
             color: #f1f5f9;
             overflow: hidden;
         }
@@ -22,59 +22,80 @@
         }
 
         .input-box {
-            background-color: #151d2b;
-            border: 1px solid #2d3748;
+            background-color: #0f172a;
+            border: 1px solid #334155;
             color: #fff;
         }
 
         input[type=range] {
             height: 4px;
             -webkit-appearance: none;
-            appearance: none;
-            background: #2d3748;
+            background: #334155;
             border-radius: 2px;
         }
 
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             background: #38bdf8;
             border-radius: 50%;
             cursor: pointer;
-            border: 2px solid #1a2333;
+            border: 2px solid #0f172a;
         }
 
         .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
+            height: 4px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
+            background: #475569;
             border-radius: 10px;
         }
 
-        /* Sidebar Responsive Logic */
         #sidebar {
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         @media (max-width: 1023px) {
             #sidebar {
-                position: absolute;
+                position: fixed;
                 top: 0;
                 left: 0;
-                height: 100%;
+                height: 100vh;
                 transform: translateX(-100%);
-                box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
+                z-index: 60;
+                box-shadow: 20px 0 50px rgba(0, 0, 0, 0.7);
             }
 
             #sidebar.active {
                 transform: translateX(0);
             }
+        }
 
-            #sidebar-overlay.active {
-                display: block;
+        #sidebar-overlay {
+            display: none;
+            backdrop-filter: blur(4px);
+        }
+
+        #sidebar-overlay.active {
+            display: block;
+        }
+
+        select option {
+            background-color: #1a2333;
+            color: #f1f5f9;
+        }
+
+        @media (max-width: 640px) {
+            #output-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            #output-actions button {
+                width: 100%;
             }
         }
     </style>
@@ -82,153 +103,167 @@
 
 <body class="h-screen flex flex-col">
 
-    <!-- Mobile Overlay -->
-    <div id="sidebar-overlay" onclick="toggleSidebarMenu(false)"
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[35] hidden transition-opacity duration-300"></div>
+    <div id="sidebar-overlay" onclick="toggleSidebarMenu(false)" class="fixed inset-0 bg-black/60 z-[55]"></div>
 
-    <!-- Header -->
     <header class="h-16 flex items-center justify-between px-6 border-b border-white/5 panel-bg z-50">
         <div class="flex items-center gap-4">
             <button id="toggleSidebar" onclick="toggleSidebarMenu(true)"
-                class="lg:hidden p-2 hover:bg-white/5 rounded-lg text-sky-400">
+                class="lg:hidden p-2 hover:bg-white/10 rounded-lg text-sky-400">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
             <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-sky-500 rounded flex items-center justify-center font-black text-white">B</div>
+                <div
+                    class="w-8 h-8 bg-sky-500 rounded flex items-center justify-center font-black text-white shadow-lg shadow-sky-500/20">
+                    B</div>
                 <h1 class="text-lg font-extrabold tracking-tight">BedrockLab</h1>
             </div>
         </div>
         <div class="flex items-center gap-3">
             <button onclick="resetAll()"
                 class="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-red-400 transition-colors">Reset
-                Global</button>
+                Canvas</button>
         </div>
     </header>
 
     <div class="flex-1 flex overflow-hidden relative">
 
-        <!-- Left Sidebar -->
         <aside id="sidebar"
-            class="w-80 panel-bg border-r border-white/5 flex flex-col z-40 h-full overflow-y-auto custom-scrollbar">
+            class="w-80 panel-bg border-r border-white/5 flex flex-col h-full overflow-y-auto custom-scrollbar">
             <div class="p-6 space-y-8">
 
-                <!-- Target Tag -->
+                <!-- Target Configuration -->
                 <section>
-                    <label class="block text-[11px] font-extrabold text-sky-500 uppercase tracking-wider mb-3">Entity
-                        Target Tag</label>
-                    <input type="text" id="entityTag" value="wiki:fmbe"
-                        class="w-full input-box rounded px-3 py-2 text-sm font-mono focus:ring-1 ring-sky-500 outline-none">
+                    <label class="block text-[11px] font-extrabold text-sky-500 uppercase tracking-wider mb-3">Target Identification</label>
+                    <div class="space-y-3">
+                        <div>
+                            <span class="text-[9px] text-slate-500 uppercase font-bold mb-1 block">Custom Tag</span>
+                            <input type="text" id="entityTag" value="wiki:fmbe"
+                                class="w-full input-box rounded px-3 py-2 text-sm font-mono focus:ring-1 ring-sky-500 outline-none">
+                        </div>
+                    </div>
                 </section>
 
-                <!-- Texture & Item -->
-                <section class="space-y-4">
-                    <div>
-                        <label
-                            class="block text-[11px] font-extrabold text-purple-400 uppercase tracking-wider mb-3">Model
-                            Texture</label>
-                        <input type="file" id="textureInput" class="hidden">
-                        <button onclick="document.getElementById('textureInput').click()"
-                            class="w-full border border-dashed border-slate-700 py-3 rounded text-[10px] font-bold text-slate-400 hover:border-sky-500 hover:text-sky-400 transition-all uppercase flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Upload Texture
-                        </button>
-                    </div>
-                    <div>
-                        <label
-                            class="block text-[11px] font-extrabold text-emerald-400 uppercase tracking-wider mb-3">Held
-                            Block/Item</label>
-                        <select id="heldItem"
-                            class="w-full input-box rounded px-3 py-2 text-sm outline-none appearance-none">
-                            <option value="minecraft:stone">Stone</option>
-                            <option value="minecraft:grass_block">Grass Block</option>
-                            <option value="minecraft:diamond_block">Diamond Block</option>
+                <!-- Item Configuration -->
+                <section>
+                    <label class="block text-[11px] font-extrabold text-pink-500 uppercase tracking-wider mb-3">Item Configuration</label>
+                    <div class="space-y-3">
+                        <span class="text-[9px] text-slate-500 uppercase font-bold mb-1 block">Held Block/Item</span>
+                        <select id="itemID" class="w-full input-box rounded px-3 py-2 text-sm focus:ring-1 ring-pink-500 outline-none cursor-pointer">
+                            <optgroup label="Common Blocks">
+                                <option value="stone">Stone</option>
+                                <option value="grass_block">Grass Block</option>
+                                <option value="dirt">Dirt</option>
+                                <option value="cobblestone">Cobblestone</option>
+                                <option value="planks">Oak Planks</option>
+                                <option value="bedrock">Bedrock</option>
+                                <option value="sand">Sand</option>
+                                <option value="gravel">Gravel</option>
+                                <option value="gold_block">Gold Block</option>
+                                <option value="iron_block">Iron Block</option>
+                                <option value="diamond_block">Diamond Block</option>
+                            </optgroup>
+                            <optgroup label="Nature & Environment">
+                                <option value="log">Oak Log</option>
+                                <option value="leaves">Oak Leaves</option>
+                                <option value="glass">Glass</option>
+                                <option value="obsidian">Obsidian</option>
+                                <option value="chest">Chest</option>
+                                <option value="crafting_table">Crafting Table</option>
+                                <option value="furnace">Furnace</option>
+                                <option value="tnt">TNT</option>
+                                <option value="bookshelf">Bookshelf</option>
+                                <option value="emerald_block">Emerald Block</option>
+                                <option value="beacon">Beacon</option>
+                            </optgroup>
+                            <optgroup label="Nether & End">
+                                <option value="netherrack">Netherrack</option>
+                                <option value="soul_sand">Soul Sand</option>
+                                <option value="glowstone">Glowstone</option>
+                                <option value="end_stone">End Stone</option>
+                                <option value="purpur_block">Purpur Block</option>
+                            </optgroup>
                         </select>
                     </div>
                 </section>
 
-                <!-- Sliders Sections -->
+                <!-- Texture Upload -->
+                <section>
+                    <label class="block text-[11px] font-extrabold text-purple-400 uppercase tracking-wider mb-3">Preview Model Texture</label>
+                    <input type="file" id="textureInput" class="hidden" accept="image/*"
+                        onchange="handleTextureUpload(this)">
+                    <button onclick="document.getElementById('textureInput').click()"
+                        class="w-full border border-dashed border-slate-700 py-3 rounded text-[10px] font-bold text-slate-400 hover:border-sky-500 hover:text-sky-400 transition-all uppercase flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Upload Texture
+                    </button>
+                </section>
+
                 <div class="space-y-10">
-                    <!-- Position -->
                     <section>
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-[12px] font-extrabold text-sky-400 uppercase tracking-wider">Position (X, Y,
-                                Z)</h3>
+                            <h3 class="text-[12px] font-extrabold text-sky-400 uppercase tracking-wider">Position</h3>
                             <button onclick="resetValues('trans')"
-                                class="text-[10px] font-bold bg-white/5 hover:bg-white/10 px-2 py-1 rounded">Reset</button>
+                                class="text-[9px] font-black bg-white/5 hover:bg-white/10 px-2 py-1 rounded uppercase">Clear</button>
                         </div>
                         <div class="space-y-5">
                             <div>
-                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>X
-                                        Position</span><span id="val-tx" class="text-slate-400">0.00</span></div>
+                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>X</span><span
+                                        id="val-tx" class="text-slate-400">0.00</span></div>
                                 <input type="range" id="tx" min="-16" max="16" step="0.01" value="0" class="w-full">
                             </div>
                             <div>
-                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>Y
-                                        Position</span><span id="val-ty" class="text-slate-400">0.00</span></div>
+                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>Y</span><span
+                                        id="val-ty" class="text-slate-400">0.00</span></div>
                                 <input type="range" id="ty" min="-16" max="16" step="0.01" value="0" class="w-full">
                             </div>
                             <div>
-                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>Z
-                                        Position</span><span id="val-tz" class="text-slate-400">0.00</span></div>
+                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>Z</span><span
+                                        id="val-tz" class="text-slate-400">0.00</span></div>
                                 <input type="range" id="tz" min="-16" max="16" step="0.01" value="0" class="w-full">
                             </div>
                         </div>
                     </section>
 
-                    <!-- Scale -->
                     <section>
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-[12px] font-extrabold text-emerald-400 uppercase tracking-wider">Scale
-                                Factors</h3>
+                            <h3 class="text-[12px] font-extrabold text-emerald-400 uppercase tracking-wider">Scale</h3>
                             <button onclick="resetValues('scale')"
-                                class="text-[10px] font-bold bg-white/5 hover:bg-white/10 px-2 py-1 rounded">Reset</button>
+                                class="text-[9px] font-black bg-white/5 hover:bg-white/10 px-2 py-1 rounded uppercase">Clear</button>
                         </div>
                         <div class="space-y-5">
                             <div>
                                 <div class="flex justify-between text-[11px] font-bold mb-2"><span>Global
                                         Scale</span><span id="val-s" class="text-slate-400">1.00</span></div>
-                                <input type="range" id="s" min="0.1" max="5" step="0.01" value="1" class="w-full">
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>XZ Scale</span><span
-                                        id="val-sxz" class="text-slate-400">1.00</span></div>
-                                <input type="range" id="sxz" min="0.1" max="5" step="0.01" value="1" class="w-full">
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>Y Scale</span><span
-                                        id="val-sy" class="text-slate-400">1.00</span></div>
-                                <input type="range" id="sy" min="0.1" max="5" step="0.01" value="1" class="w-full">
+                                <input type="range" id="s" min="0.1" max="10" step="0.01" value="1" class="w-full">
                             </div>
                         </div>
                     </section>
 
-                    <!-- Rotation -->
                     <section>
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-[12px] font-extrabold text-amber-500 uppercase tracking-wider">Rotation
-                                (Euler)</h3>
+                            <h3 class="text-[12px] font-extrabold text-amber-500 uppercase tracking-wider">Rotation</h3>
                             <button onclick="resetValues('rot')"
-                                class="text-[10px] font-bold bg-white/5 hover:bg-white/10 px-2 py-1 rounded">Reset</button>
+                                class="text-[9px] font-black bg-white/5 hover:bg-white/10 px-2 py-1 rounded uppercase">Clear</button>
                         </div>
                         <div class="space-y-5">
                             <div>
-                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>X
-                                        Rotation</span><span id="val-rx" class="text-slate-400">0°</span></div>
+                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>X Rot</span><span
+                                        id="val-rx" class="text-slate-400">0°</span></div>
                                 <input type="range" id="rx" min="-180" max="180" value="0" class="w-full">
                             </div>
                             <div>
-                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>Y
-                                        Rotation</span><span id="val-ry" class="text-slate-400">0°</span></div>
+                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>Y Rot</span><span
+                                        id="val-ry" class="text-slate-400">0°</span></div>
                                 <input type="range" id="ry" min="-180" max="180" value="0" class="w-full">
                             </div>
                             <div>
-                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>Z
-                                        Rotation</span><span id="val-rz" class="text-slate-400">0°</span></div>
+                                <div class="flex justify-between text-[11px] font-bold mb-2"><span>Z Rot</span><span
+                                        id="val-rz" class="text-slate-400">0°</span></div>
                                 <input type="range" id="rz" min="-180" max="180" value="0" class="w-full">
                             </div>
                         </div>
@@ -236,29 +271,32 @@
                 </div>
 
                 <button id="generateBtn" onclick="handleGenerate()"
-                    class="w-full bg-sky-500 hover:bg-sky-400 py-4 rounded text-xs font-black uppercase tracking-widest shadow-lg shadow-sky-500/20 active:scale-95 transition-all mb-12">
-                    Generate Sequence
+                    class="w-full bg-sky-500 hover:bg-sky-400 py-4 rounded text-xs font-black uppercase tracking-widest shadow-lg shadow-sky-500/20 active:scale-95 transition-all mb-10">
+                    Generate Full Sequence
                 </button>
             </div>
         </aside>
 
-        <!-- Viewport -->
         <main class="flex-1 relative bg-[#0b111d]">
             <div id="viewport-container" class="w-full h-full"></div>
 
-            <!-- Output Panel -->
             <div id="outputPanel"
-                class="absolute bottom-6 left-6 right-6 panel-bg border border-white/10 rounded-xl p-4 shadow-2xl transform translate-y-full opacity-0 pointer-events-none transition-all duration-300 z-30">
-                <div class="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
-                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-sky-400">Generated Function
-                        Sequence</span>
-                    <div class="flex gap-2">
-                        <button onclick="downloadFunction()"
-                            class="bg-emerald-600 hover:bg-emerald-500 text-[9px] font-black px-3 py-1 rounded uppercase tracking-widest">Download
-                            .mcfunction</button>
+                class="absolute bottom-6 left-6 right-6 panel-bg border border-white/10 rounded-xl p-4 shadow-2xl transform translate-y-full opacity-0 pointer-events-none transition-all duration-300 z-40">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 border-b border-white/5 pb-2 gap-2">
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-sky-400">Generated mcfunction code</span>
+                    <div id="output-actions" class="flex gap-2">
+                        <button onclick="downloadMcFunction()"
+                            class="bg-emerald-600 hover:bg-emerald-500 text-[9px] font-black px-4 py-1.5 rounded uppercase tracking-widest flex items-center justify-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Download
+                        </button>
                         <button onclick="copyToClipboard()" id="copyBtn"
-                            class="bg-slate-700 hover:bg-slate-600 text-[9px] font-black px-3 py-1 rounded uppercase tracking-widest">Copy</button>
-                        <button onclick="togglePanel(false)" class="text-slate-500 hover:text-white"><svg
+                            class="bg-sky-600 hover:bg-sky-500 text-[9px] font-black px-4 py-1.5 rounded uppercase tracking-widest">Copy</button>
+                        <button onclick="togglePanel(false)" class="text-slate-500 hover:text-white p-1"><svg
                                 class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
                                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -267,15 +305,8 @@
                     </div>
                 </div>
                 <div id="commandOutput"
-                    class="bg-black/30 p-4 rounded font-mono text-[11px] leading-relaxed text-emerald-400 max-h-48 overflow-y-auto custom-scrollbar border border-white/5 whitespace-pre-wrap">
+                    class="bg-black/30 p-4 rounded font-mono text-[10px] leading-relaxed text-emerald-400 max-h-56 overflow-y-auto overflow-x-auto custom-scrollbar border border-white/5 whitespace-pre-wrap">
                 </div>
-            </div>
-
-            <!-- UI Overlay Info -->
-            <div class="absolute top-6 left-6 pointer-events-none hidden lg:block">
-                <div
-                    class="bg-black/40 backdrop-blur border border-white/5 px-3 py-2 rounded text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    3D Real-time Preview</div>
             </div>
         </main>
     </div>
@@ -308,7 +339,7 @@
             container.appendChild(renderer.domElement);
 
             scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-            const dl = new THREE.DirectionalLight(0xffffff, 0.4);
+            const dl = new THREE.DirectionalLight(0xffffff, 0.5);
             dl.position.set(10, 20, 10);
             scene.add(dl);
 
@@ -316,7 +347,7 @@
             scene.add(grid);
 
             const geo = new THREE.BoxGeometry(1, 1, 1);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.9 });
+            const mat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 });
             model = new THREE.Mesh(geo, mat);
             scene.add(model);
 
@@ -330,13 +361,30 @@
             animate();
         }
 
+        function handleTextureUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const textureLoader = new THREE.TextureLoader();
+                    textureLoader.load(e.target.result, (texture) => {
+                        texture.magFilter = THREE.NearestFilter;
+                        texture.minFilter = THREE.NearestFilter;
+                        if (model) {
+                            model.material.map = texture;
+                            model.material.color.set(0xffffff);
+                            model.material.needsUpdate = true;
+                        }
+                    });
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
         function updateValues() {
             const tx = parseFloat(document.getElementById('tx').value);
             const ty = parseFloat(document.getElementById('ty').value);
             const tz = parseFloat(document.getElementById('tz').value);
             const s = parseFloat(document.getElementById('s').value);
-            const sxz = parseFloat(document.getElementById('sxz').value);
-            const sy = parseFloat(document.getElementById('sy').value);
             const rx = parseFloat(document.getElementById('rx').value);
             const ry = parseFloat(document.getElementById('ry').value);
             const rz = parseFloat(document.getElementById('rz').value);
@@ -345,15 +393,13 @@
             document.getElementById('val-ty').innerText = ty.toFixed(2);
             document.getElementById('val-tz').innerText = tz.toFixed(2);
             document.getElementById('val-s').innerText = s.toFixed(2);
-            document.getElementById('val-sxz').innerText = sxz.toFixed(2);
-            document.getElementById('val-sy').innerText = sy.toFixed(2);
             document.getElementById('val-rx').innerText = rx + '°';
             document.getElementById('val-ry').innerText = ry + '°';
             document.getElementById('val-rz').innerText = rz + '°';
 
             if (model) {
                 model.position.set(tx, ty, tz);
-                model.scale.set(s * sxz, s * sy, s * sxz);
+                model.scale.set(s, s, s);
                 model.rotation.set(THREE.MathUtils.degToRad(rx), THREE.MathUtils.degToRad(ry), THREE.MathUtils.degToRad(rz));
             }
         }
@@ -368,38 +414,50 @@
         }
 
         function handleGenerate() {
-            const tag = document.getElementById('entityTag').value;
-            const item = document.getElementById('heldItem').value;
-            const tx = document.getElementById('tx').value;
-            const ty = document.getElementById('ty').value;
-            const tz = document.getElementById('tz').value;
-            const s = document.getElementById('s').value;
-            const sxz = document.getElementById('sxz').value;
-            const sy = document.getElementById('sy').value;
+            const targetName = 'wiki:fmbe'; // Fixed on fox entity
+            const targetTag = document.getElementById('entityTag').value || 'wiki:fmbe';
+            const itemID = document.getElementById('itemID').value || 'stone';
+            
+            const tx = parseFloat(document.getElementById('tx').value).toFixed(4);
+            const ty = parseFloat(document.getElementById('ty').value).toFixed(4);
+            const tz = parseFloat(document.getElementById('tz').value).toFixed(4);
+            const s = parseFloat(document.getElementById('s').value).toFixed(4);
             const rx = document.getElementById('rx').value;
             const ry = document.getElementById('ry').value;
             const rz = document.getElementById('rz').value;
 
-            const output = `## Generated via BedrockLab\nitem replace entity @e[tag=${tag}] slot.weapon.mainhand 0 with ${item}\n\nplayanimation @e[tag=${tag}] animation.creeper.swelling none 0 "v.xpos=${tx};v.ypos=${ty};v.zpos=${tz};v.xrot=${rx};v.yrot=${ry};v.zrot=${rz};v.scale=${s};v.xzscale=${sxz};v.yscale=${sy};" wiki:scale`;
+            const adscale = Math.sqrt(s).toFixed(4);
+            const adscaled = (2.1385 * adscale).toFixed(4);
+
+            const setupCmd = `## Setup Configuration\ntag @e[name="${targetName}"] add ${targetTag}\nreplaceitem entity @e[name="${targetName}",c=1] slot.weapon.mainhand 0 ${itemID}`;
+
+            const scaleCmd = `## Scale Animation\nplayanimation @e[tag=${targetTag}] animation.player.sleeping none 0 "" controller.animation.fox.move\n\nplayanimation @e[tag=${targetTag}] animation.creeper.swelling none 0 "v.scale=${s};v.adscale=math.sqrt(v.scale);v.adscaled=${adscaled};v.xbasepos=0;v.ybasepos=0;v.zbasepos=0;v.xpos=${tx};v.ypos=${ty};v.zpos=${tz};v.xrot=q.life_time*0;v.yrot=q.life_time*0;v.zrot=q.life_time*20;v.swelling_scale1=v.adscaled;v.swelling_scale2=v.adscaled;" wiki:scale`;
+
+            const posRotCmd = `## Position & Rotation Animation\nplayanimation @e[tag=${targetTag}] animation.ender_dragon.neck_head_movement none 0 "v.adjust_xz=8*v.adscaled+v.zbasepos/v.adscaled;v.adjust_y=(-5-v.ybasepos/v.adscaled/v.adscaled)*v.adscaled;v.x=v.xbasepos/v.adscaled;v.y=v.adjust_y;v.z=v.adjust_xz;v.ty=v.y*math.cos(v.xrot)-v.z*math.sin(v.xrot);v.tz=v.y*math.sin(v.xrot)+v.z*math.cos(v.xrot);v.y=v.ty;v.z=v.tz;v.tx=-v.x*math.cos(v.zrot)+v.y*math.sin(v.zrot);v.ty=v.x*math.sin(v.zrot)+v.y*math.cos(v.zrot);v.x=v.tx;v.y=v.ty;v.tx=v.x*math.cos(v.yrot)+v.z*math.sin(v.yrot);v.tz=-v.x*math.sin(v.yrot)+v.z*math.cos(v.yrot);v.x=v.tx;v.z=v.tz;v.head_position_x=v.x+v.xpos/v.adscaled;v.head_position_y=7.48/v.adscale+v.z+v.zpos/v.adscaled;v.head_position_z=v.y-v.ypos/v.adscaled;v.head_rotation_x=90+${rx};v.head_rotation_y=${rz};v.head_rotation_z=${ry};" wiki:posrot`;
+
+            const setVarCmd = `## Variable State Editor\nplayanimation @e[tag=${targetTag}] animation.player.attack.positions none 0 "v.xrot=${rx};v.yrot=${ry};v.zrot=${rz};v.ypos=${ty};v.xpos=${tx};v.zpos=${tz};v.scale=${s};" wiki:setvariable`;
+
+            const output = `${setupCmd}\n\n${scaleCmd}\n\n${posRotCmd}\n\n${setVarCmd}`;
 
             document.getElementById('commandOutput').innerText = output;
             togglePanel(true);
 
-            // On mobile, close sidebar automatically
             if (window.innerWidth < 1024) {
                 toggleSidebarMenu(false);
             }
         }
 
-        function downloadFunction() {
+        function downloadMcFunction() {
             const text = document.getElementById('commandOutput').innerText;
-            const blob = new Blob([text], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
+            const lines = text.split('\n').filter(l => l.trim() && !l.startsWith('##'));
+            const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
+            const tag = document.getElementById('entityTag').value || 'display_entity';
             a.href = url;
-            a.download = 'bedrock_lab_animation.mcfunction';
+            a.download = `${tag.replace(':', '_')}.mcfunction`;
             a.click();
-            URL.revokeObjectURL(url);
+            window.URL.revokeObjectURL(url);
         }
 
         function copyToClipboard() {
@@ -417,22 +475,31 @@
 
         function resetValues(group) {
             if (group === 'trans') ['tx', 'ty', 'tz'].forEach(id => document.getElementById(id).value = 0);
-            if (group === 'scale') ['s', 'sxz', 'sy'].forEach(id => document.getElementById(id).value = 1);
+            if (group === 'scale') ['s'].forEach(id => document.getElementById(id).value = 1);
             if (group === 'rot') ['rx', 'ry', 'rz'].forEach(id => document.getElementById(id).value = 0);
             updateValues();
         }
 
         function resetAll() {
             resetValues('trans'); resetValues('scale'); resetValues('rot');
+            document.getElementById('itemID').value = 'stone';
+            document.getElementById('entityTag').value = 'wiki:fmbe';
+            if (model) {
+                model.material.map = null;
+                model.material.color.set(0x38bdf8);
+                model.material.needsUpdate = true;
+            }
             togglePanel(false);
         }
 
-        document.querySelectorAll('input').forEach(i => i.addEventListener('input', updateValues));
+        document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateValues));
         window.onload = () => { init3D(); updateValues(); };
         window.onresize = () => {
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
+            if (camera && renderer && container) {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            }
         };
     </script>
 </body>
