@@ -6,7 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BedrockLab | Display Entity Creator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js Core -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls for Rotation/Zoom -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
@@ -113,7 +116,7 @@
         <!-- Order-1 on mobile ensures it's at the top. Order-2 on desktop puts it to the right. -->
         <main
             class="relative order-1 lg:order-2 w-full lg:flex-1 h-[45vh] lg:h-full bg-[#0b111d] flex flex-col border-b border-white/10 lg:border-b-0">
-            <div id="viewport-container" class="w-full h-full relative z-0"></div>
+            <div id="viewport-container" class="w-full h-full relative z-0 cursor-move"></div>
 
             <!-- Output Panel Overlay -->
             <div id="outputPanel"
@@ -325,7 +328,7 @@
     </div>
 
     <script>
-        let scene, camera, renderer, model;
+        let scene, camera, renderer, model, controls;
         const container = document.getElementById('viewport-container');
 
         function init3D() {
@@ -342,6 +345,16 @@
             renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
+
+            // Add OrbitControls
+            if (typeof THREE.OrbitControls !== 'undefined') {
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true; // Adds inertia to movement
+                controls.dampingFactor = 0.05;
+                controls.screenSpacePanning = false;
+                controls.minDistance = 2; // Min zoom in
+                controls.maxDistance = 20; // Max zoom out
+            }
 
             // Lighting
             scene.add(new THREE.AmbientLight(0xffffff, 0.7));
@@ -379,6 +392,7 @@
 
             function animate() {
                 requestAnimationFrame(animate);
+                if (controls) controls.update(); // Update controls in loop
                 renderer.render(scene, camera);
             }
             animate();
@@ -450,18 +464,13 @@
             const ry = document.getElementById('ry').value;
             const rz = document.getElementById('rz').value;
 
-            const adscale = Math.sqrt(s).toFixed(4);
-            const adscaled = (2.1385 * adscale).toFixed(4);
-
             const setupCmd = `## Setup Configuration\ntag @e[name="${targetName}"] add ${targetTag}\nreplaceitem entity @e[name="${targetName}",c=1] slot.weapon.mainhand 0 ${itemID}`;
-
-            const scaleCmd = `## Scale Animation\nplayanimation @e[tag=${targetTag}] animation.player.sleeping none 0 "" controller.animation.fox.move\n\nplayanimation @e[tag=${targetTag}] animation.creeper.swelling none 0 "v.scale=${s};v.adscale=math.sqrt(v.scale);v.adscaled=${adscaled};v.xbasepos=0;v.ybasepos=0;v.zbasepos=0;v.xpos=${tx};v.ypos=${ty};v.zpos=${tz};v.xrot=q.life_time*0;v.yrot=q.life_time*0;v.zrot=q.life_time*20;v.swelling_scale1=v.adscaled;v.swelling_scale2=v.adscaled;" wiki:scale`;
 
             const posRotCmd = `## Position & Rotation Animation\nplayanimation @e[tag=${targetTag}] animation.ender_dragon.neck_head_movement none 0 "v.adjust_xz=8*v.adscaled+v.zbasepos/v.adscaled;v.adjust_y=(-5-v.ybasepos/v.adscaled/v.adscaled)*v.adscaled;v.x=v.xbasepos/v.adscaled;v.y=v.adjust_y;v.z=v.adjust_xz;v.ty=v.y*math.cos(v.xrot)-v.z*math.sin(v.xrot);v.tz=v.y*math.sin(v.xrot)+v.z*math.cos(v.xrot);v.y=v.ty;v.z=v.tz;v.tx=-v.x*math.cos(v.zrot)+v.y*math.sin(v.zrot);v.ty=v.x*math.sin(v.zrot)+v.y*math.cos(v.zrot);v.x=v.tx;v.y=v.ty;v.tx=v.x*math.cos(v.yrot)+v.z*math.sin(v.yrot);v.tz=-v.x*math.sin(v.yrot)+v.z*math.cos(v.yrot);v.x=v.tx;v.z=v.tz;v.head_position_x=v.x+v.xpos/v.adscaled;v.head_position_y=7.48/v.adscale+v.z+v.zpos/v.adscaled;v.head_position_z=v.y-v.ypos/v.adscaled;v.head_rotation_x=90+${rx};v.head_rotation_y=${rz};v.head_rotation_z=${ry};" wiki:posrot`;
 
             const setVarCmd = `## Variable State Editor\nplayanimation @e[tag=${targetTag}] animation.player.attack.positions none 0 "v.xrot=${rx};v.yrot=${ry};v.zrot=${rz};v.ypos=${ty};v.xpos=${tx};v.zpos=${tz};v.scale=${s};" wiki:setvariable`;
 
-            const output = `${setupCmd}\n\n${scaleCmd}\n\n${posRotCmd}\n\n${setVarCmd}`;
+            const output = `${setupCmd}\n\n${posRotCmd}\n\n${setVarCmd}`;
 
             document.getElementById('commandOutput').innerText = output;
             togglePanel(true);
@@ -499,6 +508,7 @@
             if (group === 'scale') ['s'].forEach(id => document.getElementById(id).value = 1);
             if (group === 'rot') ['rx', 'ry', 'rz'].forEach(id => document.getElementById(id).value = 0);
             updateValues();
+            if (controls) controls.reset(); // Reset camera view on reset
         }
 
         function resetAll() {
