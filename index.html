@@ -4,11 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BedrockLab | Display Entity Creator</title>
+    <title>BedrockLab</title>
+    <link rel="icon" type="image/png" href="./logos/website_logo.ico">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Three.js Core -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- OrbitControls for Rotation/Zoom -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -18,7 +17,6 @@
             background-color: #0f172a;
             color: #f1f5f9;
             overflow: hidden;
-            /* Prevent body scroll */
         }
 
         .panel-bg {
@@ -62,11 +60,6 @@
             background: #0f172a;
         }
 
-        /* Layout Logic:
-           - Mobile: Flex-col (Viewport Top, Controls Bottom)
-           - Desktop: Flex-row (Sidebar Left, Viewport Right)
-        */
-
         #sidebar-container {
             display: flex;
             flex-direction: column;
@@ -75,6 +68,10 @@
         select option {
             background-color: #1a2333;
             color: #f1f5f9;
+        }
+
+        .fixed-action-container {
+            background: linear-gradient(to top, #1a2333 80%, transparent);
         }
 
         @media (max-width: 640px) {
@@ -92,47 +89,205 @@
 
 <body class="h-screen flex flex-col w-full">
 
-    <!-- Header -->
     <header
-        class="h-12 lg:h-14 flex-none flex items-center justify-between px-4 lg:px-6 border-b border-white/5 panel-bg z-50">
-        <div class="flex items-center gap-3">
-            <div
-                class="w-7 h-7 bg-sky-500 rounded flex items-center justify-center font-black text-white shadow-lg shadow-sky-500/20 text-sm">
-                B</div>
-            <h1 class="text-sm lg:text-lg font-extrabold tracking-tight">BedrockLab</h1>
+        class="h-12 lg:h-14 flex-none flex items-center justify-between px-4 lg:px-6 border-b border-white/10 panel-bg z-50">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2.5">
+                <img src="./logos/website_logo.png" alt="BedrockLab Logo"
+                    class="w-8 h-8 rounded-lg shadow-lg shadow-sky-500/30 object-cover"
+                    onerror="this.src='https://via.placeholder.com/32/0ea5e9/ffffff?text=B'">
+                <div class="flex flex-col leading-none">
+                    <span class="text-xs font-black uppercase tracking-tighter text-sky-400">BedrockLab</span>
+                    <span class="text-[10px] font-bold text-slate-500">Toolbox</span>
+                </div>
+            </div>
         </div>
+
         <div class="flex items-center gap-3">
             <button onclick="resetAll()"
-                class="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-red-400 transition-colors bg-white/5 px-3 py-1.5 rounded">
-                Reset
+                class="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-red-400 transition-colors bg-white/5 px-3 py-1.5 rounded border border-white/5">
+                Reset All
             </button>
         </div>
     </header>
 
-    <!-- Main Content Wrapper -->
     <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full">
 
-        <!-- 3D Viewport (Top on Mobile, Right on Desktop) -->
-        <!-- Order-1 on mobile ensures it's at the top. Order-2 on desktop puts it to the right. -->
+        <aside id="sidebar-container"
+            class="order-2 lg:order-1 w-full lg:w-80 h-[50vh] lg:h-full panel-bg border-t lg:border-t-0 lg:border-r border-white/5 flex flex-col z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] lg:shadow-none relative">
+
+            <div
+                class="h-10 flex-none bg-black/20 border-b border-white/5 flex items-center px-4 justify-between select-none">
+                <div class="flex items-center gap-2 text-slate-400">
+                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                            d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z">
+                        </path>
+                    </svg>
+                    <span class="text-[10px] font-bold uppercase tracking-wider">Configuration</span>
+                </div>
+                <span class="text-[9px] text-slate-600 font-mono">v1.1.0</span>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-6 pb-24">
+                <!-- Category Selector -->
+                <section>
+                    <label
+                        class="block text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider mb-2">Technique
+                        / Category</label>
+                    <select id="categoryType"
+                        class="w-full input-box rounded px-3 py-2 text-xs focus:ring-1 ring-indigo-500 outline-none cursor-pointer">
+                        <option value="simplified">Simplified FMBE</option>
+                        <option value="blocks3d">3D Blocks</option>
+                        <option value="blocks2d">2D Blocks</option>
+                        <option value="item">Items</option>
+                    </select>
+                </section>
+
+                <section>
+                    <label class="block text-[10px] font-extrabold text-sky-500 uppercase tracking-wider mb-2">Target
+                        Tag</label>
+                    <input type="text" id="entityTag" value="wiki:fmbe"
+                        class="w-full input-box rounded px-3 py-2 text-xs font-mono focus:ring-1 ring-sky-500 outline-none placeholder-slate-600">
+                </section>
+
+                <section>
+                    <label class="block text-[10px] font-extrabold text-pink-500 uppercase tracking-wider mb-2">Display
+                        Item</label>
+                    <select id="itemID"
+                        class="w-full input-box rounded px-3 py-2 text-xs focus:ring-1 ring-pink-500 outline-none cursor-pointer">
+                        <optgroup label="Blocks">
+                            <option value="stone">Stone</option>
+                            <option value="grass_block">Grass Block</option>
+                            <option value="diamond_block">Diamond Block</option>
+                            <option value="gold_block">Gold Block</option>
+                            <option value="iron_block">Iron Block</option>
+                            <option value="obsidian">Obsidian</option>
+                            <option value="glass">Glass</option>
+                        </optgroup>
+                    </select>
+                </section>
+
+                <section>
+                    <label class="block text-[10px] font-extrabold text-purple-400 uppercase tracking-wider mb-2">Custom
+                        Texture</label>
+                    <input type="file" id="textureInput" class="hidden" accept="image/*"
+                        onchange="handleTextureUpload(this)">
+                    <button onclick="document.getElementById('textureInput').click()"
+                        class="w-full border border-dashed border-slate-700 py-2.5 rounded text-[10px] font-bold text-slate-400 hover:border-sky-500 hover:text-sky-400 transition-all uppercase flex items-center justify-center gap-2">
+                        Upload .png
+                    </button>
+                </section>
+
+                <div class="bg-black/20 p-3 rounded-lg border border-white/5 space-y-6">
+                    <!-- Position -->
+                    <section>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3
+                                class="text-[10px] font-extrabold text-sky-400 uppercase tracking-wider flex items-center gap-2">
+                                <span class="w-1 h-1 rounded-full bg-sky-400"></span> Position
+                            </h3>
+                            <button onclick="resetValues('trans')"
+                                class="text-[9px] font-bold text-slate-500 hover:text-white">RESET</button>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-bold w-4 text-slate-500">X</span>
+                                <input type="range" id="tx" min="-16" max="16" step="0.01" value="0" class="flex-1">
+                                <span id="val-tx" class="text-[10px] font-mono text-sky-300 w-10 text-right">0.00</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-bold w-4 text-slate-500">Y</span>
+                                <input type="range" id="ty" min="-16" max="16" step="0.01" value="0" class="flex-1">
+                                <span id="val-ty" class="text-[10px] font-mono text-sky-300 w-10 text-right">0.00</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-bold w-4 text-slate-500">Z</span>
+                                <input type="range" id="tz" min="-16" max="16" step="0.01" value="0" class="flex-1">
+                                <span id="val-tz" class="text-[10px] font-mono text-sky-300 w-10 text-right">0.00</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Scale -->
+                    <section>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3
+                                class="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                                <span class="w-1 h-1 rounded-full bg-emerald-400"></span> Scale
+                            </h3>
+                            <button onclick="resetValues('scale')"
+                                class="text-[9px] font-bold text-slate-500 hover:text-white">RESET</button>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-[10px] font-bold w-4 text-slate-500">S</span>
+                            <input type="range" id="s" min="0.1" max="10" step="0.01" value="1" class="flex-1">
+                            <span id="val-s" class="text-[10px] font-mono text-emerald-300 w-10 text-right">1.00</span>
+                        </div>
+                    </section>
+
+                    <!-- Rotation -->
+                    <section>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3
+                                class="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider flex items-center gap-2">
+                                <span class="w-1 h-1 rounded-full bg-amber-500"></span> Rotation
+                            </h3>
+                            <button onclick="resetValues('rot')"
+                                class="text-[9px] font-bold text-slate-500 hover:text-white">RESET</button>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-bold w-4 text-slate-500">RX</span>
+                                <input type="range" id="rx" min="-180" max="180" value="0" class="flex-1">
+                                <span id="val-rx" class="text-[10px] font-mono text-amber-300 w-10 text-right">0°</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-bold w-4 text-slate-500">RY</span>
+                                <input type="range" id="ry" min="-180" max="180" value="0" class="flex-1">
+                                <span id="val-ry" class="text-[10px] font-mono text-amber-300 w-10 text-right">0°</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-bold w-4 text-slate-500">RZ</span>
+                                <input type="range" id="rz" min="-180" max="180" value="0" class="flex-1">
+                                <span id="val-rz" class="text-[10px] font-mono text-amber-300 w-10 text-right">0°</span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="absolute bottom-0 left-0 right-0 p-4 fixed-action-container border-t border-white/5 z-30">
+                <button id="generateBtn" onclick="handleGenerate()"
+                    class="w-full bg-sky-500 hover:bg-sky-400 py-3 rounded-lg text-[11px] font-black uppercase tracking-widest shadow-xl shadow-sky-500/20 active:scale-[0.98] transition-all text-white flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Generate Function
+                </button>
+            </div>
+        </aside>
+
         <main
-            class="relative order-1 lg:order-2 w-full lg:flex-1 h-[45vh] lg:h-full bg-[#0b111d] flex flex-col border-b border-white/10 lg:border-b-0">
+            class="relative order-1 lg:order-2 w-full lg:flex-1 h-[50vh] lg:h-full bg-[#0b111d] flex flex-col border-b border-white/10 lg:border-b-0">
             <div id="viewport-container" class="w-full h-full relative z-0 cursor-move"></div>
 
-            <!-- Output Panel Overlay -->
             <div id="outputPanel"
                 class="absolute bottom-4 left-4 right-4 panel-bg border border-white/10 rounded-xl p-4 shadow-2xl transform translate-y-[120%] opacity-0 pointer-events-none transition-all duration-300 z-40 max-h-[80%] flex flex-col">
                 <div
                     class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 border-b border-white/5 pb-2 gap-2 flex-none">
-                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-sky-400">Generated Code</span>
+                    <span
+                        class="text-[10px] font-black uppercase tracking-[0.2em] text-sky-400 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+                        Generated Code
+                    </span>
                     <div id="output-actions" class="flex gap-2">
                         <button onclick="downloadMcFunction()"
-                            class="bg-emerald-600 hover:bg-emerald-500 text-[9px] font-black px-4 py-1.5 rounded uppercase tracking-widest flex items-center justify-center gap-1">
-                            Download
-                        </button>
+                            class="bg-emerald-600 hover:bg-emerald-500 text-[9px] font-black px-4 py-1.5 rounded uppercase tracking-widest">Download</button>
                         <button onclick="copyToClipboard()" id="copyBtn"
                             class="bg-sky-600 hover:bg-sky-500 text-[9px] font-black px-4 py-1.5 rounded uppercase tracking-widest">Copy</button>
-                        <button onclick="togglePanel(false)"
-                            class="text-slate-500 hover:text-white p-1 ml-auto sm:ml-0">
+                        <button onclick="togglePanel(false)" class="text-slate-500 hover:text-white p-1">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
                                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -142,189 +297,10 @@
                     </div>
                 </div>
                 <div id="commandOutput"
-                    class="bg-black/30 p-4 rounded font-mono text-[10px] leading-relaxed text-emerald-400 overflow-y-auto custom-scrollbar border border-white/5 whitespace-pre-wrap flex-1">
+                    class="bg-black/40 p-4 rounded font-mono text-[10px] leading-relaxed text-emerald-400 overflow-y-auto custom-scrollbar border border-white/5 whitespace-pre-wrap flex-1">
                 </div>
             </div>
         </main>
-
-        <!-- Controls Sidebar (Bottom on Mobile, Left on Desktop) -->
-        <!-- Order-2 on mobile ensures it's at the bottom. Order-1 on desktop puts it to the left. -->
-        <aside id="sidebar-container"
-            class="order-2 lg:order-1 w-full lg:w-80 h-[55vh] lg:h-full panel-bg border-t lg:border-t-0 lg:border-r border-white/5 flex flex-col z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] lg:shadow-none">
-
-            <!-- "Outliner" Style Header -->
-            <div
-                class="h-9 flex-none bg-[#111827] border-b border-white/5 flex items-center px-4 justify-between select-none">
-                <div class="flex items-center gap-2 text-slate-400">
-                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                            d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z">
-                        </path>
-                    </svg>
-                    <span class="text-[10px] font-bold uppercase tracking-wider">Settings & Properties</span>
-                </div>
-                <span class="text-[9px] text-slate-600 font-mono">1/1</span>
-            </div>
-
-            <!-- Scrollable Controls Area -->
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-6">
-                <!-- Target Configuration -->
-                <section>
-                    <label class="block text-[10px] font-extrabold text-sky-500 uppercase tracking-wider mb-2">Target
-                        ID</label>
-                    <div class="space-y-3">
-                        <div>
-                            <input type="text" id="entityTag" value="wiki:fmbe"
-                                class="w-full input-box rounded px-3 py-2 text-xs font-mono focus:ring-1 ring-sky-500 outline-none placeholder-slate-600"
-                                placeholder="e.g., wiki:my_entity">
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Item Configuration -->
-                <section>
-                    <label class="block text-[10px] font-extrabold text-pink-500 uppercase tracking-wider mb-2">Held
-                        Item</label>
-                    <div class="space-y-3">
-                        <select id="itemID"
-                            class="w-full input-box rounded px-3 py-2 text-xs focus:ring-1 ring-pink-500 outline-none cursor-pointer">
-                            <optgroup label="Common Blocks">
-                                <option value="stone">Stone</option>
-                                <option value="grass_block">Grass Block</option>
-                                <option value="dirt">Dirt</option>
-                                <option value="cobblestone">Cobblestone</option>
-                                <option value="planks">Oak Planks</option>
-                                <option value="bedrock">Bedrock</option>
-                                <option value="sand">Sand</option>
-                                <option value="gravel">Gravel</option>
-                                <option value="gold_block">Gold Block</option>
-                                <option value="iron_block">Iron Block</option>
-                                <option value="diamond_block">Diamond Block</option>
-                            </optgroup>
-                            <optgroup label="Nature & Environment">
-                                <option value="log">Oak Log</option>
-                                <option value="leaves">Oak Leaves</option>
-                                <option value="glass">Glass</option>
-                                <option value="obsidian">Obsidian</option>
-                                <option value="chest">Chest</option>
-                                <option value="crafting_table">Crafting Table</option>
-                                <option value="furnace">Furnace</option>
-                                <option value="tnt">TNT</option>
-                                <option value="bookshelf">Bookshelf</option>
-                                <option value="emerald_block">Emerald Block</option>
-                                <option value="beacon">Beacon</option>
-                            </optgroup>
-                            <optgroup label="Nether & End">
-                                <option value="netherrack">Netherrack</option>
-                                <option value="soul_sand">Soul Sand</option>
-                                <option value="glowstone">Glowstone</option>
-                                <option value="end_stone">End Stone</option>
-                                <option value="purpur_block">Purpur Block</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                </section>
-
-                <!-- Texture Upload -->
-                <section>
-                    <label
-                        class="block text-[10px] font-extrabold text-purple-400 uppercase tracking-wider mb-2">Texture</label>
-                    <input type="file" id="textureInput" class="hidden" accept="image/*"
-                        onchange="handleTextureUpload(this)">
-                    <button onclick="document.getElementById('textureInput').click()"
-                        class="w-full border border-dashed border-slate-700 py-2.5 rounded text-[10px] font-bold text-slate-400 hover:border-sky-500 hover:text-sky-400 transition-all uppercase flex items-center justify-center gap-2">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Upload Texture
-                    </button>
-                </section>
-
-                <!-- Transforms Group -->
-                <div class="bg-black/20 p-3 rounded-lg border border-white/5 space-y-6">
-                    <section>
-                        <div class="flex justify-between items-center mb-3">
-                            <h3
-                                class="text-[10px] font-extrabold text-sky-400 uppercase tracking-wider flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span> Position
-                            </h3>
-                            <button onclick="resetValues('trans')"
-                                class="text-[9px] font-bold text-slate-500 hover:text-white transition-colors">RESET</button>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="flex items-center gap-3">
-                                <span class="text-[10px] font-bold w-4 text-slate-400">X</span>
-                                <input type="range" id="tx" min="-16" max="16" step="0.01" value="0" class="flex-1">
-                                <span id="val-tx" class="text-[10px] font-mono text-sky-300 w-10 text-right">0.00</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-[10px] font-bold w-4 text-slate-400">Y</span>
-                                <input type="range" id="ty" min="-16" max="16" step="0.01" value="0" class="flex-1">
-                                <span id="val-ty" class="text-[10px] font-mono text-sky-300 w-10 text-right">0.00</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-[10px] font-bold w-4 text-slate-400">Z</span>
-                                <input type="range" id="tz" min="-16" max="16" step="0.01" value="0" class="flex-1">
-                                <span id="val-tz" class="text-[10px] font-mono text-sky-300 w-10 text-right">0.00</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section>
-                        <div class="flex justify-between items-center mb-3">
-                            <h3
-                                class="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Scale
-                            </h3>
-                            <button onclick="resetValues('scale')"
-                                class="text-[9px] font-bold text-slate-500 hover:text-white transition-colors">RESET</button>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="text-[10px] font-bold w-4 text-slate-400">S</span>
-                            <input type="range" id="s" min="0.1" max="10" step="0.01" value="1" class="flex-1">
-                            <span id="val-s" class="text-[10px] font-mono text-emerald-300 w-10 text-right">1.00</span>
-                        </div>
-                    </section>
-
-                    <section>
-                        <div class="flex justify-between items-center mb-3">
-                            <h3
-                                class="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Rotation
-                            </h3>
-                            <button onclick="resetValues('rot')"
-                                class="text-[9px] font-bold text-slate-500 hover:text-white transition-colors">RESET</button>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="flex items-center gap-3">
-                                <span class="text-[10px] font-bold w-4 text-slate-400">X</span>
-                                <input type="range" id="rx" min="-180" max="180" value="0" class="flex-1">
-                                <span id="val-rx" class="text-[10px] font-mono text-amber-300 w-10 text-right">0°</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-[10px] font-bold w-4 text-slate-400">Y</span>
-                                <input type="range" id="ry" min="-180" max="180" value="0" class="flex-1">
-                                <span id="val-ry" class="text-[10px] font-mono text-amber-300 w-10 text-right">0°</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-[10px] font-bold w-4 text-slate-400">Z</span>
-                                <input type="range" id="rz" min="-180" max="180" value="0" class="flex-1">
-                                <span id="val-rz" class="text-[10px] font-mono text-amber-300 w-10 text-right">0°</span>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-
-                <div class="pb-10">
-                    <button id="generateBtn" onclick="handleGenerate()"
-                        class="w-full bg-sky-500 hover:bg-sky-400 py-3 rounded text-[11px] font-black uppercase tracking-widest shadow-lg shadow-sky-500/20 active:scale-95 transition-all text-white">
-                        Generate Function
-                    </button>
-                </div>
-            </div>
-        </aside>
-
     </div>
 
     <script>
@@ -335,41 +311,29 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0b111d);
 
-            // Initial camera setup
             const aspect = container.clientWidth / container.clientHeight;
             camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
             camera.position.set(5, 5, 5);
-            camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
 
-            // Add OrbitControls
-            if (typeof THREE.OrbitControls !== 'undefined') {
-                controls = new THREE.OrbitControls(camera, renderer.domElement);
-                controls.enableDamping = true; // Adds inertia to movement
-                controls.dampingFactor = 0.05;
-                controls.screenSpacePanning = false;
-                controls.minDistance = 2; // Min zoom in
-                controls.maxDistance = 20; // Max zoom out
-            }
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 2;
+            controls.maxDistance = 20;
 
-            // Lighting
             scene.add(new THREE.AmbientLight(0xffffff, 0.7));
             const dl = new THREE.DirectionalLight(0xffffff, 0.6);
             dl.position.set(10, 20, 10);
             scene.add(dl);
-            const dl2 = new THREE.DirectionalLight(0x38bdf8, 0.3); // Sky blue rim light
-            dl2.position.set(-5, 0, -5);
-            scene.add(dl2);
 
-            // Grid
             const grid = new THREE.GridHelper(20, 20, 0x1e293b, 0x161e2b);
             scene.add(grid);
 
-            // Default Cube
             const geo = new THREE.BoxGeometry(1, 1, 1);
             const mat = new THREE.MeshStandardMaterial({
                 color: 0x38bdf8,
@@ -380,19 +344,16 @@
             });
             model = new THREE.Mesh(geo, mat);
 
-            // Edges for "Selected" look
             const edges = new THREE.EdgesGeometry(geo);
             const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 }));
             model.add(line);
 
             scene.add(model);
-
-            const axes = new THREE.AxesHelper(2);
-            scene.add(axes);
+            scene.add(new THREE.AxesHelper(2));
 
             function animate() {
                 requestAnimationFrame(animate);
-                if (controls) controls.update(); // Update controls in loop
+                controls.update();
                 renderer.render(scene, camera);
             }
             animate();
@@ -452,7 +413,8 @@
         }
 
         function handleGenerate() {
-            const targetName = 'wiki:fmbe'; // Fixed on fox entity
+            const category = document.getElementById('categoryType').value;
+            const targetName = 'wiki:fmbe';
             const targetTag = document.getElementById('entityTag').value || 'wiki:fmbe';
             const itemID = document.getElementById('itemID').value || 'stone';
 
@@ -464,13 +426,31 @@
             const ry = document.getElementById('ry').value;
             const rz = document.getElementById('rz').value;
 
-            const setupCmd = `## Setup Configuration\ntag @e[name="${targetName}"] add ${targetTag}\nreplaceitem entity @e[name="${targetName}",c=1] slot.weapon.mainhand 0 ${itemID}`;
+            let output = `## BedrockLab Generated Config (${category})\n`;
+            output += `tag @e[name="${targetName}"] add ${targetTag}\n`;
+            output += `replaceitem entity @e[tag=${targetTag},c=1] slot.weapon.mainhand 0 ${itemID}\n\n`;
 
-            const posRotCmd = `## Position & Rotation Animation\nplayanimation @e[tag=${targetTag}] animation.ender_dragon.neck_head_movement none 0 "v.adjust_xz=8*v.adscaled+v.zbasepos/v.adscaled;v.adjust_y=(-5-v.ybasepos/v.adscaled/v.adscaled)*v.adscaled;v.x=v.xbasepos/v.adscaled;v.y=v.adjust_y;v.z=v.adjust_xz;v.ty=v.y*math.cos(v.xrot)-v.z*math.sin(v.xrot);v.tz=v.y*math.sin(v.xrot)+v.z*math.cos(v.xrot);v.y=v.ty;v.z=v.tz;v.tx=-v.x*math.cos(v.zrot)+v.y*math.sin(v.zrot);v.ty=v.x*math.sin(v.zrot)+v.y*math.cos(v.zrot);v.x=v.tx;v.y=v.ty;v.tx=v.x*math.cos(v.yrot)+v.z*math.sin(v.yrot);v.tz=-v.x*math.sin(v.yrot)+v.z*math.cos(v.yrot);v.x=v.tx;v.z=v.tz;v.head_position_x=v.x+v.xpos/v.adscaled;v.head_position_y=7.48/v.adscale+v.z+v.zpos/v.adscaled;v.head_position_z=v.y-v.ypos/v.adscaled;v.head_rotation_x=90+${rx};v.head_rotation_y=${rz};v.head_rotation_z=${ry};" wiki:posrot`;
-
-            const setVarCmd = `## Variable State Editor\nplayanimation @e[tag=${targetTag}] animation.player.attack.positions none 0 "v.xrot=${rx};v.yrot=${ry};v.zrot=${rz};v.ypos=${ty};v.xpos=${tx};v.zpos=${tz};v.scale=${s};" wiki:setvariable`;
-
-            const output = `${setupCmd}\n\n${posRotCmd}\n\n${setVarCmd}`;
+            if (category === 'simplified') {
+                output += `## Reposition and Define FMBE Scale\n`;
+                output += `playanimation @e[tag=${targetTag}] animation.player.sleeping none 0 "" controller.animation.fox.move\n`;
+                output += `playanimation @e[tag=${targetTag}] animation.creeper.swelling none 0 "v.scale=${s};v.adscale=math.sqrt(v.scale);v.adscaled=2.1385*v.adscale;v.xbasepos=${tx};v.ybasepos=${ty};v.zbasepos=${tz};v.xpos=0;v.ypos=0;v.zpos=0;v.xrot=q.life_time*0;v.yrot=q.life_time*0;v.zrot=q.life_time*20;v.swelling_scale1=v.adscaled;v.swelling_scale2=v.adscaled;" wiki:scale\n\n`;
+                output += `## Define FMBE Position & Rotation\n`;
+                output += `playanimation @e[tag=${targetTag}] animation.ender_dragon.neck_head_movement none 0 "v.adjust_xz=8*v.adscaled+v.zbasepos/v.adscaled;v.adjust_y=(-5-v.ybasepos/v.adscaled/v.adscaled)*v.adscaled;v.x=v.xbasepos/v.adscaled;v.y=v.adjust_y;v.z=v.adjust_xz;v.ty=v.y*math.cos(v.xrot)-v.z*math.sin(v.xrot);v.tz=v.y*math.sin(v.xrot)+v.z*math.cos(v.xrot);v.y=v.ty;v.z=v.tz;v.tx=-v.x*math.cos(v.zrot)+v.y*math.sin(v.zrot);v.ty=v.x*math.sin(v.zrot)+v.y*math.cos(v.zrot);v.x=v.tx;v.y=v.ty;v.tx=v.x*math.cos(v.yrot)+v.z*math.sin(v.yrot);v.tz=-v.x*math.sin(v.yrot)+v.z*math.cos(v.yrot);v.x=v.tx;v.z=v.tz;v.head_position_x=v.x+v.xpos/v.adscaled;v.head_position_y=7.48/v.adscale+v.z+v.zpos/v.adscaled;v.head_position_z=v.y-v.ypos/v.adscaled;v.head_rotation_x=90+${rx};v.head_rotation_y=${rz};v.head_rotation_z=${ry};" wiki:posrot`;
+            }
+            else if (category === 'blocks3d') {
+                output += `/playanimation @e[tag=${targetTag}] animation.player.sleeping _ 0 "v.xpos=0;v.ypos=0;v.zpos=0;v.xrot=${rx};v.yrot=${ry};v.zrot=${rz};v.scale=${s};v.extend_scale=1;v.extend_xrot=-90;v.extend_yrot=0;v.xbasepos=${tx};v.ybasepos=${ty};v.zbasepos=${tz};v.F.r5=-math.sin(v.xrot);v.F.r2=-math.sin(v.yrot);v.F.r3=-math.sin(v.zrot);v.F.r4=math.cos(v.zrot);v.F.r8=math.cos(v.yrot);v.F.r0=-v.F.r5*v.F.r2*v.F.r3+v.F.r8*v.F.r4;v.F.r1=-v.F.r5*v.F.r2*v.F.r4-v.F.r8*v.F.r3;v.F.r6=-v.F.r5*v.F.r8*v.F.r3-v.F.r2*v.F.r4;v.F.r7=-v.F.r5*v.F.r8*v.F.r4+v.F.r2*v.F.r3;v.F.r2=v.F.r2*math.cos(v.xrot);v.F.r3=v.F.r3*math.cos(v.xrot);v.F.r4=v.F.r4*math.cos(v.xrot);v.F.r8=v.F.r8*math.cos(v.xrot);v.F.e0=math.cos(v.extend_yrot);v.F.e4=math.cos(v.extend_xrot);v.F.e5=-math.sin(v.extend_xrot);v.F.e6=math.sin(v.extend_yrot);v.F.e1=v.F.e5*v.F.e6;v.F.e2=-v.F.e4*v.F.e6;v.F.e7=-v.F.e5*v.F.e0;v.F.e8=v.F.e4*v.F.e0;v.F.p0=v.F.r0*v.F.e0+v.F.r2*v.F.e6;v.F.p1=v.F.r0*v.F.e1+v.F.r1*v.F.e4+v.F.r2*v.F.e7;v.F.p2=v.F.r0*v.F.e2+v.F.r1*v.F.e5+v.F.r2*v.F.e8;v.F.p3=v.F.r3*v.F.e0+v.F.r5*v.F.e6;v.F.p4=v.F.r3*v.F.e1+v.F.r4*v.F.e4+v.F.r5*v.F.e7;v.F.p5=v.F.r3*v.F.e2+v.F.r4*v.F.e5+v.F.r5*v.F.e8;v.F.p6=v.F.r6*v.F.e0+v.F.r8*v.F.e6;v.F.p7=v.F.r6*v.F.e1+v.F.r7*v.F.e4+v.F.r8*v.F.e7;v.F.p8=v.F.r6*v.F.e2+v.F.r7*v.F.e5+v.F.r8*v.F.e8;" controller.animation.fox.move\n`;
+                output += `/playanimation @e[tag=${targetTag}] animation.creeper.swelling _ 0 "v.swelling_scale2=v.extend_scale*(v.swelling_scale1=(v.F.s=math.sqrt(32/7*v.scale)));" wiki:fmbe.3d_blocks.anim1\n`;
+                output += `/playanimation @e[tag=${targetTag}] animation.ender_dragon.neck_head_movement _ 0 "v.head_position_x=-16/v.F.s*((v.xpos-1)*v.F.p1+(v.ypos-1/128)*v.F.p4+v.zpos*v.F.p7+(v.xbasepos*v.F.e1+(v.ybasepos+10/7)*v.extend_scale*v.F.e4+(v.zbasepos-16/7)*v.F.e7)*v.scale);v.head_position_y=16/v.F.s*(((v.xpos-1)*v.F.p2+(v.ypos-1/128)*v.F.p5+v.zpos*v.F.p8)/v.extend_scale+(v.xbasepos*v.F.e2+(v.ybasepos+10/7)*v.extend_scale*v.F.e5+(v.zbasepos-16/7)*v.F.e8)*v.scale);v.head_position_z=16/v.F.s*((v.xpos-1)*v.F.p0+(v.ypos-1/128)*v.F.p3+v.zpos*v.F.p6+(v.xbasepos*v.F.e0+(v.zbasepos-16/7)*v.F.e6)*v.scale);v.head_rotation_x=v.F.e6?math.atan2(0,-v.F.e6):math.atan2(-v.F.e8,v.F.e5);v.head_rotation_y=math.asin(-v.F.e0);v.head_rotation_z=v.F.e6?math.atan2(-v.F.e2,-v.F.e1):0;" wiki:fmbe.3d_blocks.anim2\n`;
+                output += `/playanimation @e[tag=${targetTag}] animation.warden.move _ 0 "v.body_x_rot=v.F.p5||v.F.p3?math.atan2(v.F.p5,-v.F.p3):math.atan2(-v.F.p0,-v.F.p2);v.body_z_rot=v.F.p5||v.F.p3?math.atan2(-v.F.p1,v.F.p7):0;" wiki:fmbe.3d_blocks.anim3\n`;
+                output += `/playanimation @e[tag=${targetTag}] animation.player.attack.rotations _ 0 "v.attack_body_rot_y=math.asin(-v.F.p4);" wiki:fmbe.3d_blocks.anim4`;
+            }
+            else if (category === 'blocks2d' || category === 'item') {
+                output += `/playanimation @e[tag=${targetTag}] animation.player.sleeping _ 0 "v.xpos=0;v.ypos=0;v.zpos=0;v.xrot=${rx};v.yrot=${ry};v.zrot=${rz};v.scale=${s};v.extend_scale=1;v.extend_xrot=-90;v.extend_yrot=0;v.xbasepos=${tx};v.ybasepos=${ty};v.zbasepos=${tz};v.F.r5=-math.sin(v.xrot);v.F.r2=-math.sin(v.yrot);v.F.r3=-math.sin(v.zrot);v.F.r4=math.cos(v.zrot);v.F.r8=math.cos(v.yrot);v.F.r0=-v.F.r5*v.F.r2*v.F.r3+v.F.r8*v.F.r4;v.F.r1=-v.F.r5*v.F.r2*v.F.r4-v.F.r8*v.F.r3;v.F.r6=-v.F.r5*v.F.r8*v.F.r3-v.F.r2*v.F.r4;v.F.r7=-v.F.r5*v.F.r8*v.F.r4+v.F.r2*v.F.r3;v.F.r2=v.F.r2*math.cos(v.xrot);v.F.r3=v.F.r3*math.cos(v.xrot);v.F.r4=v.F.r4*math.cos(v.xrot);v.F.r8=v.F.r8*math.cos(v.xrot);v.F.e0=math.cos(v.extend_yrot);v.F.e4=math.cos(v.extend_xrot);v.F.e5=-math.sin(v.extend_xrot);v.F.e6=math.sin(v.extend_yrot);v.F.e1=v.F.e5*v.F.e6;v.F.e2=-v.F.e4*v.F.e6;v.F.e7=-v.F.e5*v.F.e0;v.F.e8=v.F.e4*v.F.e0;v.F.p0=v.F.r0*v.F.e0+v.F.r2*v.F.e6;v.F.p1=v.F.r0*v.F.e1+v.F.r1*v.F.e4+v.F.r2*v.F.e7;v.F.p2=v.F.r0*v.F.e2+v.F.r1*v.F.e5+v.F.r2*v.F.e8;v.F.p3=v.F.r3*v.F.e0+v.F.r5*v.F.e6;v.F.p4=v.F.r3*v.F.e1+v.F.r4*v.F.e4+v.F.r5*v.F.e7;v.F.p5=v.F.r3*v.F.e2+v.F.r4*v.F.e5+v.F.r5*v.F.e8;v.F.p6=v.F.r6*v.F.e0+v.F.r8*v.F.e6;v.F.p7=v.F.r6*v.F.e1+v.F.r7*v.F.e4+v.F.r8*v.F.e7;v.F.p8=v.F.r6*v.F.e2+v.F.r7*v.F.e5+v.F.r8*v.F.e8;" controller.animation.fox.move\n`;
+                output += `/playanimation @e[tag=${targetTag}] animation.creeper.swelling _ 0 "v.F.co=math.cos(25);v.F.si=math.sin(25);v.swelling_scale2=v.extend_scale*(v.swelling_scale1=(v.F.s=math.sqrt(17/8*v.scale)));" wiki:fmbe.2d_blocks.anim1\n`;
+                output += `/playanimation @e[tag=${targetTag}] animation.ender_dragon.neck_head_movement _ 0 "v.F.X=(v.xpos-1)*v.F.p0+(v.ypos-1/128)*v.F.p3+v.zpos*v.F.p6+((v.xbasepos+2/9)*v.F.e0+(v.zbasepos+32/65)*v.F.e6*v.extend_scale)*v.scale;v.F.Y=(v.xpos-1)*v.F.p1+(v.ypos-1/128)*v.F.p4+v.zpos*v.F.p7+((v.xbasepos+2/9)*v.F.e1+(v.ybasepos+10/11)*v.F.e4+(v.zbasepos+32/65)*v.F.e7*v.extend_scale)*v.scale;v.head_position_y=16/v.F.s*(((v.xpos-1)*v.F.p2+(v.ypos-1/128)*v.F.p5+v.zpos*v.F.p8)/v.extend_scale+((v.xbasepos+2/9)*v.F.e2+(v.ybasepos+10/11)*v.F.e5+(v.zbasepos+32/65)*v.F.e8*v.extend_scale)*v.scale);v.head_position_x=16/v.F.s*(v.F.X*v.F.co-v.F.Y*v.F.si);v.head_position_z=16/v.F.s*(v.F.X*v.F.si+v.F.Y*v.F.co);v.head_rotation_x=v.F.e6*v.F.si+v.F.e7*v.F.co||v.F.e0*v.F.si*v.F.si+v.F.e1*v.F.si*v.F.co+v.F.e4*v.F.co*v.F.co?math.atan2(-v.F.e6*v.F.si-v.F.e7*v.F.co,v.F.e0*v.F.si*v.F.si+v.F.e1*v.F.si*v.F.co+v.F.e4*v.F.co*v.F.co):math.atan2(v.F.e2*v.F.si+v.F.e5*v.F.co,v.F.e8);v.head_rotation_y=math.asin(v.F.e4*v.F.si*v.F.co-v.F.e1*v.F.co*v.F.co-v.F.e0*v.F.co*v.F.si);v.head_rotation_z=v.F.e6*v.F.si+v.F.e7*v.F.co||v.F.e0*v.F.si*v.F.si+v.F.e1*v.F.si*v.F.co+v.F.e4*v.F.co*v.F.co?math.atan2(v.F.e5*v.F.si-v.F.e2*v.F.co,v.F.e0*v.F.co*v.F.co-v.F.e1*v.F.co*v.si+v.F.e4*v.F.si*v.F.si):0;" wiki:fmbe.2d_blocks.anim2\n`;
+                output += `/playanimation @e[tag=${targetTag}] animation.warden.move _ 0 "v.body_x_rot=v.F.p5||v.F.p3*v.F.si+v.F.p4*v.F.co?math.atan2(v.F.p5,-v.F.p3*v.F.si-v.F.p4*v.F.co):math.atan2(-v.F.p0*v.F.si-v.F.p1*v.F.co,-v.F.p2);v.body_z_rot=v.F.p5||v.F.p3*v.F.si+v.F.p4*v.F.co?math.atan2(v.F.p0*v.F.co-v.F.p1*v.F.si,v.F.p7*v.F.si-v.F.p6*v.F.co):0;" wiki:fmbe.2d_blocks.anim3\n`;
+                output += `/playanimation @e[tag=${targetTag}] animation.player.attack.rotations _ 0 "v.attack_body_rot_y=math.asin(v.F.p3*v.F.co-v.F.p4*v.F.si);" wiki:fmbe.2d_blocks.anim4`;
+            }
 
             document.getElementById('commandOutput').innerText = output;
             togglePanel(true);
@@ -478,25 +458,24 @@
 
         function downloadMcFunction() {
             const text = document.getElementById('commandOutput').innerText;
-            const lines = text.split('\n').filter(l => l.trim() && !l.startsWith('##'));
-            const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+            const blob = new Blob([text], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            const tag = document.getElementById('entityTag').value || 'display_entity';
             a.href = url;
-            a.download = `${tag.replace(':', '_')}.mcfunction`;
+            a.download = `display_entity.mcfunction`;
             a.click();
             window.URL.revokeObjectURL(url);
         }
 
         function copyToClipboard() {
             const text = document.getElementById('commandOutput').innerText;
-            const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
             document.execCommand('copy');
-            document.body.removeChild(el);
+            document.body.removeChild(textArea);
+
             const btn = document.getElementById('copyBtn');
             const originalText = btn.innerText;
             btn.innerText = "COPIED!";
@@ -508,26 +487,24 @@
             if (group === 'scale') ['s'].forEach(id => document.getElementById(id).value = 1);
             if (group === 'rot') ['rx', 'ry', 'rz'].forEach(id => document.getElementById(id).value = 0);
             updateValues();
-            if (controls) controls.reset(); // Reset camera view on reset
         }
 
         function resetAll() {
-            resetValues('trans'); resetValues('scale'); resetValues('rot');
+            ['tx', 'ty', 'tz', 'rx', 'ry', 'rz'].forEach(id => document.getElementById(id).value = 0);
+            document.getElementById('s').value = 1;
             document.getElementById('itemID').value = 'stone';
-            document.getElementById('entityTag').value = 'wiki:fmbe';
+            document.getElementById('categoryType').value = 'simplified';
             if (model) {
                 model.material.map = null;
                 model.material.color.set(0x38bdf8);
                 model.material.needsUpdate = true;
             }
+            updateValues();
             togglePanel(false);
         }
 
         document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', updateValues));
-
         window.onload = () => { init3D(); updateValues(); };
-
-        // Robust resize handler for split screen
         window.addEventListener('resize', () => {
             if (camera && renderer && container) {
                 camera.aspect = container.clientWidth / container.clientHeight;
